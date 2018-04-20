@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+    <property name="LOG_HOME" value="${log.dir:-logs}/${APP_NAME}" />
+    <property name="ENCODER_PATTERN"
+              value="%d{yyyy-MM-dd  HH:mm:ss.SSS} [%thread] %-5level %logger{80} - %msg%n" />
+    <contextName>${APP_NAME}</contextName>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${ENCODER_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.apache.zookeeper" level="error"/>
+
+    <root>
+        <level value="INFO" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
