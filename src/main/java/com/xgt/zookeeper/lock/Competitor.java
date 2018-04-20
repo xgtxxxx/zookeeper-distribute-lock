@@ -25,7 +25,7 @@ public class Competitor implements Runnable {
                 } catch (final InterruptedException e) {
                     LOGGER.error(e.getMessage(), e);
                 }
-            }, 6000);
+            }, true);
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
         }

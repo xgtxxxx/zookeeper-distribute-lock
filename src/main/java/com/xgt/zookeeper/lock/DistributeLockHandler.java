@@ -16,10 +16,11 @@ public class DistributeLockHandler implements LockHandler {
     private static final Logger LOG = LoggerFactory.getLogger(DistributeLockHandler.class);
     private static final String ROOT = "/locks"; //锁的根节点，如果有多个业务需要分布式锁，那么最好多创建几个锁节点分支，如/root/job1_lock; /root/job2_lock...
     private static final String LOCK_NAME = "testLock"; //本业务的锁名字
+    private final AtomicInteger processStep = new AtomicInteger(1);//标记，在尝试执行任务超时的时候，判定该任务是否正在执行。
     private final ZkClient client;//这里使用ZkClient，避免自己维护监听事件
     private final String competitorName;//用于打印日志
     private String myLockNode;//本次获取锁时创建的节点
-    private final AtomicInteger processStep = new AtomicInteger(1);//标记，在尝试执行任务超时的时候，判定该任务是否正在执行。
+    private boolean isAlreadyWaiting;
 
     public DistributeLockHandler(final String competitorName) {
         this.competitorName = competitorName;
@@ -102,11 +103,15 @@ public class DistributeLockHandler implements LockHandler {
         //注册监听
         //这里其实有些问题，监听root的子节点变化，不管子节点增加还是减少都会促发监听事件，很容易‘惊群’
         //1、应该尝试监听本进程的上个节点变化，或者监听第一个节点的变化，但是暂时没有找到ZkClient提供这个接口
-        //2、需要调查下ZkClient是否会重复创建监听？/// TODO: 2018/4/20
-        client.subscribeChildChanges(ROOT, (parentPath, currentChilds) -> {
-            LOG.info("Nodes changed, remain nodes: {}", currentChilds);
-            process(currentChilds, safeCaller, true);
-        });
+
+        //防止重复注册监听
+        if(!isAlreadyWaiting) {
+            client.subscribeChildChanges(ROOT, (parentPath, currentChilds) -> {
+                LOG.info("{} received nodes change event, remain nodes: {}", competitorName, currentChilds);
+                process(currentChilds, safeCaller, true);
+            });
+            isAlreadyWaiting = true;
+        }
     }
 
     private void unlock() {

@@ -1,6 +1,10 @@
 package com.xgt.zookeeper.lock;
 
+import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.ZkClient;
+
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Test {
     public static void main(String[] args) throws InterruptedException {
